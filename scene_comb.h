@@ -11,8 +11,8 @@
 
 #define MY_PI 3.14159265358979323846
 
-#define WIDTH 216
-#define HEIGHT 216
+#define WIDTH 512
+#define HEIGHT 512
 
 #define VIEWPORT_HEIGHT 2.0
 #define VIEWPORT_WIDTH 2.0
@@ -135,20 +135,20 @@ void setup_scene()
     sphere_lambertian ground = {
         .s = {
             .center = vec3_make(0.0, -1000.0, 0.0),
-            .radius = 992.0},
+            .radius = 999.0},
         .m = {.albedo = color_make(0.8, 0.8, 0.8)}};
 
     sphere_metal metal_sphere = {
         .s = {
-            .center = vec3_make(0.0, 1.0, 0.0),
+            .center = vec3_make(1.5, 0.0, -5.0),
             .radius = 1.0},
-        .m = {.col = color_make(0.8, 0.6, 0.2), .fuzz = 0.0}};
+        .m = {.col = color_make(0.8, 0.6, 0.2), .fuzz = 0.1}};
 
     sphere_lambertian lambertian_sphere = {
         .s = {
-            .center = vec3_make(0.0, 1.0, 0.0),
+            .center = vec3_make(-1.5, 0.0, -5.0),
             .radius = 1.0},
-        .m = {.albedo = color_make(0.8, 0.6, 0.2)}};
+        .m = {.albedo = color_make(0.3, 0.8, 0.2)}};
 
     SPHERES_LAMBERTIAN = malloc(sizeof(sphere_lambertian) * 2);
     SPHERES_LAMBERTIAN[0] = ground;

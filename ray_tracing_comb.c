@@ -207,12 +207,12 @@ void save_ppm(const char *filename, color image[HEIGHT][WIDTH])
     fclose(f);
 }
 
-int main(void)
+int main(int argc, char *argv[])
 {
     setup_scene();
     printf("setup scene done entity: %zu\n", ENTITY_NUM);
     color image[HEIGHT][WIDTH];
     render(image);
-    save_ppm("sphere.ppm", image);
+    save_ppm("ri_comb.ppm", image);
     return 0;
 }

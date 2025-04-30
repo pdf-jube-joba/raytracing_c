@@ -6,7 +6,7 @@
 #include "world_entity.h"
 #include "scene.h"
 
-#define SAMPLING 16
+#define SAMPLING 32
 #define MAX_REFLECTION_DEPTH 5
 
 double time_diff_sec(struct timeval st, struct timeval et)
@@ -14,26 +14,23 @@ double time_diff_sec(struct timeval st, struct timeval et)
     return (double)(et.tv_sec - st.tv_sec) + (et.tv_usec - st.tv_usec) / 1000000.0;
 }
 
-color ray_color(ray r, sphere *spheres, size_t num_spheres, triangle *triangles, size_t num_triangles, int *state)
+color ray_color(ray r, unsigned int *state)
 {
-    hit_record hit_records[MAX_REFLECTION_DEPTH];
+    entity hit_entity[MAX_REFLECTION_DEPTH];
 
     int reflection_depth = 0;
 
     for (reflection_depth = 0; reflection_depth < MAX_REFLECTION_DEPTH; ++reflection_depth)
     {
-        hit_record closest = {.t = -1.0};
+        hit_record_geometry closest = {.t = -1.0};
 
-        for (size_t i = 0; i < NUM_OF_SPHERES; ++i)
+        for (size_t i = 0; i < ENTITY_NUM; ++i)
         {
-            hit_record rec = hit_sphere(SPHERES[i], r);
-            hit_record_closer(&closest, rec);
-        }
-
-        for (size_t i = 0; i < NUM_OF_TRIANGLES; ++i)
-        {
-            hit_record rec = hit_triangle(TRIANGLES[i], r);
-            hit_record_closer(&closest, rec);
+            hit_record_geometry rec = hit_geometry(ENTITY[i].geo, r);
+            if (hit_record_closer(&closest, rec))
+            {
+                hit_entity[reflection_depth] = ENTITY[i];
+            }
         }
 
         if (closest.t < 0.0)
@@ -44,10 +41,7 @@ color ray_color(ray r, sphere *spheres, size_t num_spheres, triangle *triangles,
         else
         {
             // hit
-
-            // new ray
-            r = closest.mat->scatter(closest.mat, closest, state);
-            hit_records[reflection_depth] = closest;
+            r = scatter_material(hit_entity[reflection_depth].mat, closest, state);
         }
     }
 
@@ -68,8 +62,7 @@ color ray_color(ray r, sphere *spheres, size_t num_spheres, triangle *triangles,
 
     for (int i = reflection_depth - 1; i >= 0; --i)
     {
-        hit_record rec = hit_records[i];
-        pixel_color = rec.mat->color_transform(rec.mat->data, rec, pixel_color, state);
+        pixel_color = color_transform_material(hit_entity[i].mat, pixel_color, state);
     }
 
     return pixel_color;
@@ -80,7 +73,7 @@ void render(color image[HEIGHT][WIDTH])
     struct timeval t1, t2;
 
     // seed for random number generation
-    int global_seed = rand();
+    unsigned int global_seed = rand();
 
     double total_time = 0.0;
 
@@ -101,8 +94,6 @@ void render(color image[HEIGHT][WIDTH])
                 double u = ((double)x + x_offset) / (WIDTH - 1);
                 double v = ((double)y + y_offset) / (HEIGHT - 1);
 
-                double d = rand();
-
                 vec3 direction = vec3_add(
                     LOWER_LEFT_CORNER,
                     vec3_add(
@@ -110,7 +101,7 @@ void render(color image[HEIGHT][WIDTH])
                         vec3_scale(VERTICAL, v)));
 
                 ray r = ray_make(CAMERA_ORIGIN, direction);
-                col = vec3_add(col, ray_color(r, SPHERES, NUM_OF_SPHERES, TRIANGLES, NUM_OF_TRIANGLES, &global_seed));
+                col = vec3_add(col, ray_color(r, &global_seed));
             }
 
             col = vec3_scale(col, 1.0 / SAMPLING);
@@ -141,11 +132,11 @@ void save_ppm(const char *filename, color image[HEIGHT][WIDTH])
     fclose(f);
 }
 
-int main(void)
+int main(int argc, char *argv[])
 {
     setup_scene();
     color image[HEIGHT][WIDTH];
     render(image);
-    save_ppm("sphere.ppm", image);
+    save_ppm("ri.ppm", image);
     return 0;
 }
