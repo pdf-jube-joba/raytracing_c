@@ -6,7 +6,7 @@
 #include "world_entity_comb.h"
 #include "scene_comb.h"
 
-#define SAMPLING 32
+#define SAMPLING 128
 #define MAX_REFLECTION_DEPTH 5
 
 double time_diff_sec(struct timeval st, struct timeval et)
@@ -154,6 +154,7 @@ void render(color image[HEIGHT][WIDTH])
 
     double total_time = 0.0;
 
+    #pragma omp parallel for
     for (int y = HEIGHT - 1; y >= 0; --y)
     {
 
