@@ -63,14 +63,13 @@ void world_hit(ray r, hit_record_geometry *closest, material_type *mt, metal *ma
     }
 }
 
-color ray_color(ray r, int *state)
+color ray_color(ray r, unsigned int *state)
 {
+    material_type mts[MAX_REFLECTION_DEPTH];
 
-    material_type mts[ENTITY_NUM];
-
-    metal hit_metals[ENTITY_NUM];
+    metal hit_metals[MAX_REFLECTION_DEPTH];
     int hit_metals_count = 0;
-    lambertian hit_lambertian[ENTITY_NUM];
+    lambertian hit_lambertian[MAX_REFLECTION_DEPTH];
     int hit_lambertian_count = 0;
 
     int reflection_depth = 0;
@@ -79,7 +78,6 @@ color ray_color(ray r, int *state)
     {
         hit_record_geometry closest;
         material_type m;
-        void *material;
         world_hit(r, &closest, &m, &hit_metals[hit_metals_count], &hit_lambertian[hit_lambertian_count]);
 
         if (closest.t < 0.0)
@@ -150,7 +148,7 @@ void render(color image[HEIGHT][WIDTH])
     struct timeval t1, t2;
 
     // seed for random number generation
-    int global_seed = rand();
+    unsigned int global_seed = rand();
 
     double total_time = 0.0;
 
@@ -170,8 +168,6 @@ void render(color image[HEIGHT][WIDTH])
                 double y_offset = rand_unit(&global_seed);
                 double u = ((double)x + x_offset) / (WIDTH - 1);
                 double v = ((double)y + y_offset) / (HEIGHT - 1);
-
-                double d = rand();
 
                 vec3 direction = vec3_add(
                     LOWER_LEFT_CORNER,
@@ -214,6 +210,7 @@ void save_ppm(const char *filename, color image[HEIGHT][WIDTH])
 int main(void)
 {
     setup_scene();
+    printf("setup scene done entity: %zu\n", ENTITY_NUM);
     color image[HEIGHT][WIDTH];
     render(image);
     save_ppm("sphere.ppm", image);

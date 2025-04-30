@@ -151,28 +151,32 @@ void setup_scene()
         .m = {.albedo = color_make(0.8, 0.6, 0.2)}};
 
     SPHERES_LAMBERTIAN = malloc(sizeof(sphere_lambertian) * 2);
-    if (SPHERES_LAMBERTIAN == NULL)
-    {
-        perror("malloc");
-        exit(EXIT_FAILURE);
-    }
     SPHERES_LAMBERTIAN[0] = ground;
     SPHERES_LAMBERTIAN[1] = lambertian_sphere;
     NUM_OF_SPHERES_LAMBERTIAN = 2;
 
     SPHERES_METAL = malloc(sizeof(sphere_metal) * 1);
-    if (SPHERES_METAL == NULL)
-    {
-        perror("malloc");
-        exit(EXIT_FAILURE);
-    }
     SPHERES_METAL[0] = metal_sphere;
     NUM_OF_SPHERES_METAL = 1;
 
-    TRIANGLES_LAMBERTIAN = NULL;
+    // we do not use this
+    // but copilot hallucinate with this
+    TRIANGLES_LAMBERTIAN = malloc(sizeof(triangle_lambertian) * 1);
     NUM_OF_TRIANGLES_LAMBERTIAN = 0;
-    TRIANGLES_METAL = NULL;
+    // same here
+    TRIANGLES_METAL = malloc(sizeof(triangle_metal) * 1);
     NUM_OF_TRIANGLES_METAL = 0;
+
+
+    if (SPHERES_METAL == NULL || SPHERES_LAMBERTIAN == NULL ||
+        TRIANGLES_METAL == NULL || TRIANGLES_LAMBERTIAN == NULL)
+    {
+        fprintf(stderr, "malloc failed\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // any static pointer of {SPHERES_METAL, SPHERES_LAMBERTIAN, TRIANGLES_METAL, TRIANGLES_LAMBERTIAN} is not NULL
+    // so we can discuss without "there may null pointer"
 
     ENTITY_NUM = NUM_OF_SPHERES_METAL + NUM_OF_SPHERES_LAMBERTIAN + NUM_OF_TRIANGLES_METAL + NUM_OF_TRIANGLES_LAMBERTIAN;
 }
