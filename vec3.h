@@ -4,6 +4,9 @@
 #include <stdio.h>
 #include <math.h>
 #include <assert.h>
+#include <limits.h> // UINT_MAX
+
+#define MY_PI 3.14159265358979323846
 
 // ====== randoms ======
 static inline double xor_shift(unsigned int *state)
@@ -18,6 +21,20 @@ static inline double xor_shift(unsigned int *state)
 static inline double rand_unit(unsigned int *state)
 {
     return xor_shift(state) / (double)UINT_MAX;
+}
+
+static inline double rand_range(unsigned int*state, double min, double max)
+{
+    return min + (max - min) * rand_unit(state);
+}
+
+// ====== utility ======
+
+static double schlick(double cosine, double ref_idx)
+{
+    double r0 = (1 - ref_idx) / (1 + ref_idx);
+    r0 = r0 * r0;
+    return r0 + (1 - r0) * pow((1 - cosine), 5);
 }
 
 // ====== vector ======
@@ -89,13 +106,30 @@ static inline vec3 vec3_reflect(vec3 v, vec3 n)
     return vec3_sub(v, vec3_scale(n, 2.0 * vec3_dot(v, n)));
 }
 
+// // cos^3 phi なのでだめらしい
+// static inline vec3 random_unit_vector(unsigned int *state)
+// {
+//     vec3 random = vec3_make(
+//         rand_unit(state) * 2.0 - 1.0,
+//         rand_unit(state) * 2.0 - 1.0,
+//         rand_unit(state) * 2.0 - 1.0);
+//     return vec3_unit(random);
+// }
+
 static inline vec3 random_unit_vector(unsigned int *state)
 {
-    vec3 random = vec3_make(
-        rand_unit(state) * 2.0 - 1.0,
-        rand_unit(state) * 2.0 - 1.0,
-        rand_unit(state) * 2.0 - 1.0);
-    return vec3_unit(random);
+    double a = rand_range(state, 0, 2 * MY_PI);
+    double z = rand_range(state, -1, 1);
+    double r = sqrt(1 - z * z);
+    return vec3_make(r * cos(a), r * sin(a), z);
+}
+
+static inline vec3 refract(vec3 uv, vec3 n, double etai_over_etat)
+{
+    double cos_theta = vec3_dot(vec3_inv(uv), n);
+    vec3 r_out_parallel = vec3_scale(vec3_add(uv, vec3_scale(n, cos_theta)), etai_over_etat);
+    vec3 r_out_perp = vec3_scale(n, -sqrt(1.0 - vec3_dot(r_out_parallel, r_out_parallel)));
+    return vec3_add(r_out_perp, r_out_parallel);
 }
 
 // type for point

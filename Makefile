@@ -5,9 +5,14 @@ LDFLAGS := -lm
 SRCS = $(wildcard *.c)
 TARGETS = $(basename $(SRCS))
 
-all: $(TARGETS)
+.PHONY: build
 
-# 各 .c → 実行ファイル（同名）にコンパイル
-$(TARGETS): %: %.c
-	$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS)
+build:
+	$(CC) $(CFLAGS) -o ray_tracing ray_tracing.c $(LDFLAGS)
+	$(CC) $(CFLAGS) -o ray_tracing_comb_omp ray_tracing_comb_omp.c $(LDFLAGS)
+	$(CC) $(CFLAGS) -o ray_tracing_comb ray_tracing_comb.c $(LDFLAGS)
 
+run: build
+	./ray_tracing
+	./ray_tracing_comb_omp
+	./ray_tracing_comb

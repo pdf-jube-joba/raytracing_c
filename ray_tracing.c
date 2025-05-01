@@ -1,12 +1,11 @@
 #include <stdio.h>
 #include <sys/time.h> // for time
-#include <limits.h>   // UINT_MAX
 
 #include "vec3.h"
 #include "world_entity.h"
 #include "scene.h"
 
-#define SAMPLING 32
+#define SAMPLING 128
 #define MAX_REFLECTION_DEPTH 5
 
 double time_diff_sec(struct timeval st, struct timeval et)
@@ -110,7 +109,7 @@ void render(color image[HEIGHT][WIDTH])
 
         gettimeofday(&t2, NULL);
         total_time = time_diff_sec(t1, t2);
-        printf("%i %f sec\n", y, total_time);
+        // printf("%i %f sec\n", y, total_time);
     }
 }
 
@@ -136,7 +135,16 @@ int main(int argc, char *argv[])
 {
     setup_scene();
     color image[HEIGHT][WIDTH];
+
+    struct timeval t1, t2;
+    gettimeofday(&t1, NULL);
+
     render(image);
+
+    gettimeofday(&t2, NULL);
+    double total_time = time_diff_sec(t1, t2);
+    printf("render done %f sec\n", total_time);
+
     save_ppm("ri.ppm", image);
     return 0;
 }

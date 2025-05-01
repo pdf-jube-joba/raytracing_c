@@ -8,3 +8,5 @@
 !*.h
 !*.cpp
 !*.hpp
+
+!scene.txt

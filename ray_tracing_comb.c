@@ -1,12 +1,11 @@
 #include <stdio.h>
 #include <sys/time.h> // for time
-#include <limits.h>   // UINT_MAX
 
 #include "vec3.h"
 #include "world_entity_comb.h"
 #include "scene_comb.h"
 
-#define SAMPLING 32
+#define SAMPLING 128
 #define MAX_REFLECTION_DEPTH 5
 
 double time_diff_sec(struct timeval st, struct timeval et)
@@ -14,53 +13,48 @@ double time_diff_sec(struct timeval st, struct timeval et)
     return (double)(et.tv_sec - st.tv_sec) + (et.tv_usec - st.tv_usec) / 1000000.0;
 }
 
-// if there is a hit
-// - subst hit_record_geometry
-// - subst material_type
-// - subst either metal or lambertian
-void world_hit(ray r, hit_record_geometry *closest, material_type *mt, metal *material_metal, lambertian *material_lambertian)
+material_union world_hit(ray r, hit_record_geometry *closest)
 {
+    material_union mu;
     *closest = (hit_record_geometry){.t = -1.0};
 
-    for (size_t i = 0; i < NUM_OF_SPHERES_METAL; ++i)
+    for (size_t i = 0; i < ENTITY_NUM; ++i)
     {
-        hit_record_geometry rec = hit_sphere(&SPHERES_METAL[i].s, r);
-        if (hit_record_closer(closest, rec))
+        entity e = ENTITY[i];
+        bool b = false;
+        ;
+        switch (e.geo.type)
         {
-            *mt = METAL;
-            *material_metal = SPHERES_METAL[i].m;
+        case SPHERE:
+            b = hit_record_closer(closest, hit_sphere(&e.geo.geometry.s, r));
+            break;
+        case TRIANGLE:
+            b = hit_record_closer(closest, hit_triangle(&e.geo.geometry.t, r));
+            break;
+        default:
+            break;
         }
-    }
 
-    for (size_t i = 0; i < NUM_OF_SPHERES_LAMBERTIAN; ++i)
-    {
-        hit_record_geometry rec = hit_sphere(&SPHERES_LAMBERTIAN[i].s, r);
-        if (hit_record_closer(closest, rec))
+        if (b)
         {
-            *mt = LAMBERTIAN;
-            *material_lambertian = SPHERES_LAMBERTIAN[i].m;
+            mu.type = e.mat.type;
+            switch (e.mat.type)
+            {
+            case METAL:
+                mu.material.m = e.mat.material.m;
+                break;
+            case LAMBERTIAN:
+                mu.material.l = e.mat.material.l;
+                break;
+            case DIELECTRIC:
+                mu.material.d = e.mat.material.d;
+                break;
+            default:
+                break;
+            }
         }
     }
-
-    for (size_t i = 0; i < NUM_OF_TRIANGLES_METAL; ++i)
-    {
-        hit_record_geometry rec = hit_triangle(&TRIANGLES_METAL[i].t, r);
-        if (hit_record_closer(closest, rec))
-        {
-            *mt = METAL;
-            *material_metal = TRIANGLES_METAL[i].m;
-        }
-    }
-
-    for (size_t i = 0; i < NUM_OF_TRIANGLES_LAMBERTIAN; ++i)
-    {
-        hit_record_geometry rec = hit_triangle(&TRIANGLES_LAMBERTIAN[i].t, r);
-        if (hit_record_closer(closest, rec))
-        {
-            *mt = LAMBERTIAN;
-            *material_lambertian = TRIANGLES_LAMBERTIAN[i].m;
-        }
-    }
+    return mu;
 }
 
 color ray_color(ray r, unsigned int *state)
@@ -71,14 +65,16 @@ color ray_color(ray r, unsigned int *state)
     int hit_metals_count = 0;
     lambertian hit_lambertian[MAX_REFLECTION_DEPTH];
     int hit_lambertian_count = 0;
+    dielectric hit_dielectric[MAX_REFLECTION_DEPTH];
+    int hit_dielectric_count = 0;
 
     int reflection_depth = 0;
 
     for (reflection_depth = 0; reflection_depth < MAX_REFLECTION_DEPTH; ++reflection_depth)
     {
         hit_record_geometry closest;
-        material_type m;
-        world_hit(r, &closest, &m, &hit_metals[hit_metals_count], &hit_lambertian[hit_lambertian_count]);
+        material_union mu;
+        mu = world_hit(r, &closest);
 
         if (closest.t < 0.0)
         {
@@ -88,17 +84,25 @@ color ray_color(ray r, unsigned int *state)
         else
         {
             // hit
-            switch (m)
+            switch (mu.type)
             {
             case METAL:
+                hit_metals[hit_metals_count] = mu.material.m;
                 r = scatter_metal(&hit_metals[hit_metals_count], closest, state);
                 mts[reflection_depth] = METAL;
                 hit_metals_count++;
                 break;
             case LAMBERTIAN:
+                hit_lambertian[hit_lambertian_count] = mu.material.l;
                 r = scatter_lambertian(&hit_lambertian[hit_lambertian_count], closest, state);
                 mts[reflection_depth] = LAMBERTIAN;
                 hit_lambertian_count++;
+                break;
+            case DIELECTRIC:
+                hit_dielectric[hit_dielectric_count] = mu.material.d;
+                r = scatter_dielectric(&hit_dielectric[hit_dielectric_count], closest, state);
+                mts[reflection_depth] = DIELECTRIC;
+                hit_dielectric_count++;
                 break;
             default:
                 break;
@@ -134,6 +138,10 @@ color ray_color(ray r, unsigned int *state)
         case LAMBERTIAN:
             hit_lambertian_count--;
             pixel_color = color_transform_lambertian(&hit_lambertian[hit_lambertian_count], pixel_color, state);
+            break;
+        case DIELECTRIC:
+            hit_dielectric_count--;
+            pixel_color = color_transform_dielectric(&hit_dielectric[hit_dielectric_count], pixel_color, state);
             break;
         default:
             break;
@@ -185,7 +193,7 @@ void render(color image[HEIGHT][WIDTH])
 
         gettimeofday(&t2, NULL);
         total_time = time_diff_sec(t1, t2);
-        printf("%i %f sec\n", y, total_time);
+        // printf("%i %f sec\n", y, total_time);
     }
 }
 
@@ -210,9 +218,17 @@ void save_ppm(const char *filename, color image[HEIGHT][WIDTH])
 int main(int argc, char *argv[])
 {
     setup_scene();
-    printf("setup scene done entity: %zu\n", ENTITY_NUM);
     color image[HEIGHT][WIDTH];
+
+    struct timeval t1, t2;
+    gettimeofday(&t1, NULL);
+
     render(image);
+
+    gettimeofday(&t2, NULL);
+    double total_time = time_diff_sec(t1, t2);
+    printf("render done %f sec\n", total_time);
+
     save_ppm("ri_comb.ppm", image);
     return 0;
 }

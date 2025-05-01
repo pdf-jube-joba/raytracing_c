@@ -6,8 +6,7 @@
 #include <math.h>
 #include "vec3.h"
 #include "world_entity.h"
-
-#define MY_PI 3.14159265358979323846
+#include "parse.h"
 
 #define WIDTH 512
 #define HEIGHT 512
@@ -21,7 +20,7 @@ static vec3 HORIZONTAL;
 static vec3 VERTICAL;
 static vec3 LOWER_LEFT_CORNER;
 
-static entity* ENTITY;
+static entity *ENTITY;
 static size_t ENTITY_NUM;
 
 void setup_scene()
@@ -40,47 +39,36 @@ void setup_scene()
         CAMERA_ORIGIN,
         lower_left_corner_vector);
 
-    sphere ground = {
-        .center = vec3_make(0.0, -1000.0, 0.0),
-        .radius = 999.0};
+    size_t entity_count = setup_file();
+    ENTITY = malloc(sizeof(entity) * entity_count);
 
-    lambertian ground_material = {
-        .albedo = color_make(0.8, 0.8, 0.8)};
-
-    entity ground_entity = {
-        .geo = create_sphere(ground),
-        .mat = lambertian_material(ground_material)};
-
-    sphere sphere1 = {
-        .center = vec3_make(1.5, 0.0, -5.0),
-        .radius = 1.0};
-
-    metal metal_material1 = {
-        .col = color_make(0.8, 0.6, 0.2),
-        .fuzz = 0.1};
-
-    entity metal_entity1 = {
-        .geo = create_sphere(sphere1),
-        .mat = metal_material(metal_material1)};
-
-    sphere sphere2 = {
-        .center = vec3_make(-1.5, 0.0, -5.0),
-        .radius = 1.0};
-
-    lambertian lambertian_material2 = {
-        .albedo = color_make(0.3, 0.8, 0.2)};
-
-    entity lambertian_entity2 = {
-        .geo = create_sphere(sphere2),
-        .mat = lambertian_material(lambertian_material2)};
-
-    ENTITY = malloc(sizeof(entity) * 3);
-
-    ENTITY[0] = ground_entity;
-    ENTITY[1] = metal_entity1;
-    ENTITY[2] = lambertian_entity2;
-    ENTITY_NUM = 3;
-
+    result res;
+    while (parse_line(&res))
+    {
+        switch (res.geo_type)
+        {
+        case SPHERE:
+            ENTITY[ENTITY_NUM].geo = create_sphere(res.sph);
+            break;
+        case TRIANGLE:
+            ENTITY[ENTITY_NUM].geo = create_triangle(res.tri);
+            break;
+        }
+        switch (res.mat_type)
+        {
+        case METAL:
+            ENTITY[ENTITY_NUM].mat = metal_material(res.met);
+            break;
+        case LAMBERTIAN:
+            ENTITY[ENTITY_NUM].mat = lambertian_material(res.lam);
+            break;
+        case DIELECTRIC:
+            ENTITY[ENTITY_NUM].mat = dielectric_material(res.die);
+            break;
+        }
+    
+        ENTITY_NUM++;
+    }
 }
 
 #endif
