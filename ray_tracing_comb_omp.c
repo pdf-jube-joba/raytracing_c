@@ -110,21 +110,7 @@ color ray_color(ray r, unsigned int *state)
         }
     }
 
-    // first color
-    color pixel_color;
-    if (reflection_depth >= MAX_REFLECTION_DEPTH)
-    {
-        // printf("find! %f %f %f\n", r.direction.x, r.direction.y, r.direction.z);
-        pixel_color = color_make(0.8, 0.8, 0.8);
-    }
-    else
-    {
-        vec3 unit_direction = vec3_unit(r.direction);
-        double t = 0.5 * (unit_direction.y + 1.0);
-        pixel_color = vec3_add(
-            vec3_scale(vec3_make(1.0, 1.0, 1.0), 1.0 - t),
-            vec3_scale(vec3_make(0.5, 0.7, 1.0), t));
-    }
+    color pixel_color = background_color(r);
 
     // compute color by reverse order
     for (int i = reflection_depth - 1; i >= 0; --i)
@@ -156,7 +142,7 @@ void render(color image[HEIGHT][WIDTH])
     struct timeval t1, t2;
 
     // seed for random number generation
-    unsigned int global_seed = rand();
+    unsigned int global_seed = RANDOM_SEED_GLOBAL;
 
     double total_time = 0.0;
 

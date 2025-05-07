@@ -1,5 +1,5 @@
-#define WIDTH 512
-#define HEIGHT 512
+#define WIDTH 128
+#define HEIGHT 128
 
 #define VIEWPORT_HEIGHT 2.0
 #define VIEWPORT_WIDTH 2.0
@@ -7,3 +7,5 @@
 
 #define SAMPLING 128
 #define MAX_REFLECTION_DEPTH 5
+
+#define RANDOM_SEED_GLOBAL 0x12345678

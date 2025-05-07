@@ -23,7 +23,7 @@ static inline double rand_unit(unsigned int *state)
     return xor_shift(state) / (double)UINT_MAX;
 }
 
-static inline double rand_range(unsigned int*state, double min, double max)
+static inline double rand_range(unsigned int *state, double min, double max)
 {
     return min + (max - min) * rand_unit(state);
 }
@@ -183,6 +183,16 @@ static inline color color_attenuation(color a, color b)
         a.x * b.x,
         a.y * b.y,
         a.z * b.z);
+}
+
+static inline color background_color(ray r)
+{
+    vec3 unit_direction = vec3_unit(r.direction);
+    double t = 0.5 * (unit_direction.y + 1.0);
+    return color_mix(
+        color_make(1.0, 1.0, 1.0),
+        color_make(0.5, 0.7, 1.0),
+        t);
 }
 
 void write_color(FILE *f, color c)
