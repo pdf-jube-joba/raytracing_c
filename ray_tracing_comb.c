@@ -14,14 +14,13 @@ color ray_color(ray r, unsigned int *state)
     for (reflection_depth = 0; reflection_depth < MAX_REFLECTION_DEPTH; ++reflection_depth)
     {
         hit_record_geometry closest = {.t = -1.0};
-        material_union mu;
 
         for (size_t i = 0; i < ENTITY_NUM; ++i)
         {
             hit_record_geometry rec = hit_geometry(ENTITY[i].geo, r);
             if (hit_record_closer(&closest, rec))
             {
-                mu = ENTITY[i].mat;
+                hit_mat[reflection_depth] = ENTITY[i].mat;
             }
         }
 
@@ -32,8 +31,7 @@ color ray_color(ray r, unsigned int *state)
         }
         else
         {
-            r = scatter_material(mu, closest, state);
-            hit_mat[reflection_depth] = mu;
+            r = scatter_material(hit_mat[reflection_depth], closest, state);
         }
     }
 
