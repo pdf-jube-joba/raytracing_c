@@ -1,41 +1,9 @@
 #ifndef VEC3_H
 #define VEC3_H
 
-#include <stdio.h>
 #include <math.h>
 #include <assert.h>
-#include <limits.h> // UINT_MAX
-
-#define MY_PI 3.14159265358979323846
-
-// ====== randoms ======
-static inline double xor_shift(unsigned int *state)
-{
-    *state ^= *state << 13;
-    *state ^= *state >> 17;
-    *state ^= *state << 5;
-    return *state;
-}
-
-// return [0, 1)
-static inline double rand_unit(unsigned int *state)
-{
-    return xor_shift(state) / (double)UINT_MAX;
-}
-
-static inline double rand_range(unsigned int *state, double min, double max)
-{
-    return min + (max - min) * rand_unit(state);
-}
-
-// ====== utility ======
-
-static double schlick(double cosine, double ref_idx)
-{
-    double r0 = (1 - ref_idx) / (1 + ref_idx);
-    r0 = r0 * r0;
-    return r0 + (1 - r0) * pow((1 - cosine), 5);
-}
+#include "utils.h"
 
 // ====== vector ======
 

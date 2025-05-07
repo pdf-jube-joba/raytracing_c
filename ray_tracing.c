@@ -5,14 +5,9 @@
 #include "world_entity.h"
 #include "scene.h"
 
-double time_diff_sec(struct timeval st, struct timeval et)
-{
-    return (double)(et.tv_sec - st.tv_sec) + (et.tv_usec - st.tv_usec) / 1000000.0;
-}
-
 color ray_color(ray r, unsigned int *state)
 {
-    entity hit_entity[MAX_REFLECTION_DEPTH];
+    material hit_mat[MAX_REFLECTION_DEPTH];
 
     int reflection_depth = 0;
 
@@ -25,7 +20,7 @@ color ray_color(ray r, unsigned int *state)
             hit_record_geometry rec = hit_geometry(ENTITY[i].geo, r);
             if (hit_record_closer(&closest, rec))
             {
-                hit_entity[reflection_depth] = ENTITY[i];
+                hit_mat[reflection_depth] = ENTITY[i].mat;
             }
         }
 
@@ -37,7 +32,7 @@ color ray_color(ray r, unsigned int *state)
         else
         {
             // hit
-            r = scatter_material(hit_entity[reflection_depth].mat, closest, state);
+            r = scatter_material(hit_mat[reflection_depth], closest, state);
         }
     }
 
@@ -45,7 +40,7 @@ color ray_color(ray r, unsigned int *state)
 
     for (int i = reflection_depth - 1; i >= 0; --i)
     {
-        pixel_color = color_transform_material(hit_entity[i].mat, pixel_color, state);
+        pixel_color = color_transform_material(hit_mat[i], pixel_color, state);
     }
 
     return pixel_color;
