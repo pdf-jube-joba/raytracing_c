@@ -1,0 +1,9 @@
+#define WIDTH 512
+#define HEIGHT 512
+
+#define VIEWPORT_HEIGHT 2.0
+#define VIEWPORT_WIDTH 2.0
+#define FOCAL_LENGTH 1.0
+
+#define SAMPLING 128
+#define MAX_REFLECTION_DEPTH 5

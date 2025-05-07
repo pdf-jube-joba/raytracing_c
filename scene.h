@@ -7,13 +7,7 @@
 #include "vec3.h"
 #include "world_entity.h"
 #include "parse.h"
-
-#define WIDTH 512
-#define HEIGHT 512
-
-#define VIEWPORT_HEIGHT 2.0
-#define VIEWPORT_WIDTH 2.0
-#define FOCAL_LENGTH 1.0
+#include "settings.h"
 
 static vec3 CAMERA_ORIGIN;
 static vec3 HORIZONTAL;
@@ -45,29 +39,31 @@ void setup_scene()
     result res;
     while (parse_line(&res))
     {
+        geometry geo;
+        material mat;
         switch (res.geo_type)
         {
         case SPHERE:
-            ENTITY[ENTITY_NUM].geo = create_sphere(res.sph);
+            geo = create_sphere(res.sph);
             break;
         case TRIANGLE:
-            ENTITY[ENTITY_NUM].geo = create_triangle(res.tri);
+            geo = create_triangle(res.tri);
             break;
         }
         switch (res.mat_type)
         {
         case METAL:
-            ENTITY[ENTITY_NUM].mat = metal_material(res.met);
+            mat = metal_material(res.met);
             break;
         case LAMBERTIAN:
-            ENTITY[ENTITY_NUM].mat = lambertian_material(res.lam);
+            mat = lambertian_material(res.lam);
             break;
         case DIELECTRIC:
-            ENTITY[ENTITY_NUM].mat = dielectric_material(res.die);
+            mat = dielectric_material(res.die);
             break;
         }
+        ENTITY[ENTITY_NUM++] = (entity) { .geo = geo, .mat = mat };
     
-        ENTITY_NUM++;
     }
 }
 

@@ -82,6 +82,7 @@ material lambertian_material(lambertian l)
 {
     lambertian *l_ptr = malloc(sizeof(lambertian));
     *l_ptr = l;
+
     material mat;
     mat.scatter = (scatter_fn)scatter_lambertian;
     mat.color_transform = (color_transform_fn)color_transform_lambertian;
@@ -94,6 +95,7 @@ material dielectric_material(dielectric d)
 {
     dielectric *d_ptr = malloc(sizeof(dielectric));
     *d_ptr = d;
+
     material mat;
     mat.scatter = (scatter_fn)scatter_dielectric;
     mat.color_transform = (color_transform_fn)color_transform_dielectric;

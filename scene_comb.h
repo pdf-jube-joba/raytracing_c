@@ -7,22 +7,14 @@
 #include "vec3.h"
 #include "world_entity_comb.h"
 #include "parse.h"
-
-#define WIDTH 512
-#define HEIGHT 512
-
-#define VIEWPORT_HEIGHT 2.0
-#define VIEWPORT_WIDTH 2.0
-#define FOCAL_LENGTH 1.0
+#include "settings.h"
 
 static vec3 CAMERA_ORIGIN;
 static vec3 HORIZONTAL;
 static vec3 VERTICAL;
 static vec3 LOWER_LEFT_CORNER;
 
-static entity *ENTITY = NULL;
-static size_t ENTITY_NUM = 0;
-
+static entity *ENTITY;
 static size_t ENTITY_NUM;
 
 void setup_scene()

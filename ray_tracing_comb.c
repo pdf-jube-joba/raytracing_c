@@ -5,9 +5,6 @@
 #include "world_entity_comb.h"
 #include "scene_comb.h"
 
-#define SAMPLING 128
-#define MAX_REFLECTION_DEPTH 5
-
 double time_diff_sec(struct timeval st, struct timeval et)
 {
     return (double)(et.tv_sec - st.tv_sec) + (et.tv_usec - st.tv_usec) / 1000000.0;
@@ -110,11 +107,9 @@ color ray_color(ray r, unsigned int *state)
         }
     }
 
-    // first color
     color pixel_color;
     if (reflection_depth >= MAX_REFLECTION_DEPTH)
     {
-        // printf("find! %f %f %f\n", r.direction.x, r.direction.y, r.direction.z);
         pixel_color = color_make(0.8, 0.8, 0.8);
     }
     else
